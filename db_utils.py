@@ -1,9 +1,33 @@
+
+
+from sqlalchemy import create_engine
 import yaml
 import pandas as pd
-from sqlalchemy import create_engine
 
 # Class for connecting to and interacting with a remote RDS database
 class RDSDatabaseConnector:
+    """
+    A class for interacting with a remote RDS database.
+
+    This class provides methods for:
+    - Establishing a connection to the database using SQLAlchemy.
+    - Executing SQL queries and fetching data as Pandas DataFrames.
+    - Saving DataFrames as tables in the database.
+S
+    Attributes:
+        engine: The SQLAlchemy engine object for database interactions.
+
+    Methods:
+        initialize_sqlachemy(credentials):
+            Initializes the SQLAlchemy engine using the provided credentials.
+
+        extract_data(query):
+            Extracts data from the database using the specified SQL query.
+
+        save_data(df, table_name):
+            Saves a Pandas DataFrame to the database as a new table.
+    """
+
     def __init__(self, credentials):
         # Initialize the SQLAlchemy engine using the provided credentials
         self.engine = self.initialize_sqlachemy(credentials)
@@ -42,26 +66,20 @@ class RDSDatabaseConnector:
         df.to_sql(table_name, self.engine, if_exists='replace', index=False)
 
 # Function to load credentials from a YAML file
-def load_credential_file():
-    with open(f'credentials.yaml',) as f:
-        credentials = yaml.safe_load(f)
-    return credentials
+    def load_credential_file():
+        with open(f'credentials.yaml',) as f:
+            credentials = yaml.safe_load(f)
+        return credentials
 
 # Function to save a DataFrame to a CSV file
-def save_data_to_file(data_df):
-    data_df.to_csv('loan_payments')
+    def save_data_to_file(data_df):
+        data_df.to_csv('loan_payments')
 
-# Load credentials from the YAML file
-credentials = load_credential_file()
+class test_class:
 
-# Create a database connector instance
-connector = RDSDatabaseConnector(credentials)
+    def __init__(self, number):
+        self.number = number
+    def add(number):
+        print(number + number)
 
-# Define the SQL query to extract loan payment data
-query = "SELECT * FROM loan_payments"
 
-# Extract the data from the database using the query
-extracted_df = connector.extract_data(query)
-
-# Save the extracted data to a CSV file
-save_data_to_file(extracted_df)
