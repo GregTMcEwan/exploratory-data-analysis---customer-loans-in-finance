@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-
+import re
 
 class DataTransform:
     """
@@ -11,6 +11,9 @@ class DataTransform:
 
     Methods: 
 
+    to_datetime:
+
+    to_float:
 
 
     
@@ -19,11 +22,13 @@ class DataTransform:
     def __init__(self, df):
         self.df = df
 
-    def change_datetime():
-        pass 
+    def to_datetime(df, format, columns):
+        df[columns] = df[columns].apply(lambda col: pd.to_datetime(col, format=format))
+        return df
+    
+    def to_float(x):
+        try:
+            return float(re.findall(r'\d+', x)[0])
+        except:
+            return None
 
-    def remove_duplicates():
-        pass
-
-    def dummy_func():
-        print("I am a test function")
