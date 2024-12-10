@@ -1,5 +1,3 @@
-
-
 from sqlalchemy import create_engine
 import yaml
 import pandas as pd
@@ -74,12 +72,4 @@ S
 # Function to save a DataFrame to a CSV file
     def save_data_to_file(data_df):
         data_df.to_csv('loan_payments')
-
-class test_class:
-
-    def __init__(self, number):
-        self.number = number
-    def add(number):
-        print(number + number)
-
 
