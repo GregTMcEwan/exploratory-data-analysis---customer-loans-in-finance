@@ -53,16 +53,7 @@ S
             # Execute the query and return the results as a DataFrame
             df = pd.read_sql_query(query, conn)
         return df
-
-    def save_data(self, df, table_name):
-        """Saves a DataFrame to the database as a new table.
-
-        Args:
-            df: The DataFrame to save.
-            table_name: The name of the table to create.
-        """
-        df.to_sql(table_name, self.engine, if_exists='replace', index=False)
-
+    
 # Function to load credentials from a YAML file
     def load_credential_file():
         with open(f'credentials.yaml',) as f:
@@ -70,6 +61,6 @@ S
         return credentials
 
 # Function to save a DataFrame to a CSV file
-    def save_data_to_file(data_df):
-        data_df.to_csv('loan_payments')
+    def save_data_to_file(self, df):
+        df.to_csv('loan_payments')
 
