@@ -4,13 +4,109 @@ import plotly.express as px
 from scipy import stats
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
-
+import re
 
 class Plotter:
     def __init__(self, data):
         self.data = data
 
-    def boxplot(self, data, columns):
+
+
+    def pie_chart(self, data, category_col, title='Loan Pie Chart', labels=None):
+        """
+        Creates a Plotly Express pie chart
+
+        Parameters:
+            data (pd.DataFrame): The input DataFrame.
+            category_col (str): Column name for the categories to be visualized.
+            title (str, optional): The title of the pie chart.
+            labels (dict, optional): Labels for the categories.
+
+        Returns:
+            fig: A Plotly Express pie chart.
+        """
+        # Generate pie chart
+        fig = px.pie(data_frame=data, names=category_col, title=title, labels=labels)
+
+        # Update layout for better visuals
+        fig.update_layout(
+            title=title,
+            template='plotly_white',
+            showlegend=True
+        )
+        # Show pie chart
+        fig.show()
+
+    def bar_chart(self,
+        data, 
+        category_col, 
+        group_col, 
+        agg_col=None, 
+        agg_func='count', 
+        percentage=False, 
+        title='Bar Chart', 
+        xlabel=None, 
+        ylabel=None
+    ):
+        """
+        Creates a Plotly Express bar chart
+
+        Parameters:
+            df (pd.DataFrame): The input DataFrame.
+            category_col (str): Column name representing the categories for the x-axis.
+            group_col (str): Column name for grouping 
+            agg_col (str, optional): Column to aggregate on. If None, aggregation will count rows.
+            agg_func (str, optional): Aggregation function ('count', 'sum', 'mean', etc.).
+            percentage (bool, optional): Show data as percentages of the total within each category.
+            title (str, optional): Chart title.
+            xlabel (str, optional): Label for the x-axis.
+            ylabel (str, optional): Label for the y-axis.
+
+        Returns:
+            fig: A Plotly Express bar chart.
+        """
+        # Aggregate the data
+        if agg_func == 'count' and agg_col is None:
+            grouped = data.groupby([category_col, group_col]).size().reset_index(name='value')
+        else:
+            grouped = data.groupby([category_col, group_col])[agg_col].agg(agg_func).reset_index(name='value')
+        
+        # Convert to percentage if required
+        if percentage:
+            grouped['percentage'] = grouped.groupby(category_col)['value'].transform(lambda x: round((x / x.sum()) * 100, 2))
+            y_col = 'percentage'
+            ylabel = ylabel or 'Percentage (%)'
+        else:
+            y_col = 'value'
+            ylabel = ylabel or 'Count'
+
+        # Create the bar chart
+        fig = px.bar(
+            grouped, 
+            x=category_col, 
+            y=y_col, 
+            color=group_col, 
+            barmode='stack',
+            title=title,
+            labels={category_col: xlabel or category_col, y_col: ylabel, group_col: group_col}
+        )
+        
+        fig.update_layout(
+            title=title,
+            xaxis_title=xlabel or category_col,
+            yaxis_title=ylabel,
+            legend_title=group_col,
+            template='plotly_white'
+        )
+        fig.show()
+
+
+
+    def boxplot(self,
+            data,
+            columns,
+            title = 'Loan Information Boxplots'
+        ):
         rows = (len(columns) + 1) // 2  # Calculate the number of rows needed
         fig = make_subplots(rows=rows, cols=2, subplot_titles=[
             f"{col}<br><sub>subtitle</sub>" for col in columns
@@ -28,41 +124,49 @@ class Plotter:
         # Update the layout for better appearance
         fig.update_layout(
             height=300 * rows,  # Adjust height based on number of rows
-            title_text="Loan Information Boxplots",
+            title_text=title,
             showlegend=False  # Hide legends for clarity
         )
         fig.show()
 
 
-    def scattergraph(self, data, x_col, y_col, sample_size = 1000):
+    def scattergraph(self,
+                data,
+                x_col,
+                y_col,
+                sample_size = 1000,
+                marginals = True,
+                title = f'Loan DataFrame Scattergraph'
+
+                ):
         # Get a random sample of the DataFrame to reduce visual clutter in the scattergraph
         if len(data) > sample_size:
             data = data.sample(sample_size)
+        if marginals == True:
+            marg_x = 'violin'
+            marg_y = 'box'
+        else:
+            marg_y = None   
+            marg_x = None 
 
         fig = px.scatter(
             data,
             x=x_col,
             y=y_col,
-            marginal_y='violin',
-            marginal_x='box',
+            marginal_y=marg_x,
+            marginal_x=marg_y,
             trendline='ols',
-            title=f"Scatterplot of {x_col} vs {y_col}"
+            title=title
         )
 
-        fig.update_layout(
-            template='plotly_white',
-            title=dict(
-                text=f"Scatterplot of {x_col} vs {y_col}",
-                x=0.5,
-                font=dict(size=20)
-            ),
-            xaxis=dict(title=f"{x_col}", showgrid=True),
-            yaxis=dict(title=f"{y_col}", showgrid=True)
-        )
 
         # Display the figure
         fig.show()
-    def histogram(self, data, columns, bins=40):
+    def histogram(self,
+                data,
+                columns,
+                bins=40
+                ):
         rows = (len(columns) + 1) // 2  # Calculate the number of rows needed
         fig = make_subplots(rows=rows, cols=2, subplot_titles=[
             f"{col}<br><sub>Skew: {round(data[col].skew(), 2)}</sub>" for col in columns
@@ -159,6 +263,11 @@ class DataFrameTransform:
     def update_data(self, data):
         self.data = data
 
+
+    def to_float(self, column):
+        # Apply the to_float transformation to a column
+        self.data[column] = self.data[column].apply(lambda x: float(re.findall(r'\d+', x)[0]) if isinstance(x, str) else None)
+
     def to_datetime(self, data, format, columns):
         for col in columns:
             if col not in data.columns:
@@ -243,3 +352,20 @@ class DataFrameTransform:
         print(f'Outliers removed using {method}. {count_before_removal-count_after_removal} rows removed')
         
         return self.data
+    
+
+    def identify_highly_correlated(self, data, threshold=0.8):
+        # Compute the correlation matrix
+        corr_matrix = data.corr()
+        
+        # Create an empty list to store columns with high correlation
+        highly_correlated = []
+        # Loop through the correlation matrix to find highly correlated columns
+        for col in corr_matrix.columns:
+            for row in corr_matrix.index:
+                # Skip the diagonal
+                if col != row and corr_matrix.loc[row, col] > threshold:
+                    if col not in highly_correlated and row not in highly_correlated:
+                        highly_correlated.append(col)  # Mark one of the columns for removal
+
+        return highly_correlated
