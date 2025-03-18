@@ -79,6 +79,7 @@ exploratory-data-analysis---customer-loans-in-finance616/
 ├── df_tools.py               # DataFrame tools for data manipulation and cleaning
 ├── EDA.ipynb                 # Jupyter notebook for exploratory data analysis
 ├── loan_payments.csv         # Sample loan portfolio data
+├── requirements.txt          # Project requirements
 ├── README.md                 # Project documentation
 └── .gitignore                # Files and directories to ignore in version control
 ```
